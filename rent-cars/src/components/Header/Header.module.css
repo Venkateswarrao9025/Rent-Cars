@@ -1,0 +1,48 @@
+.header {
+  background-color: var(--primary-color-blue);
+  height: 60px;
+}
+
+.nav {
+  max-width: 1216px;
+  height: 60px;
+  padding: 0 16px;
+  margin: 0 auto;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.logoText {
+  @media only screen and (max-width: 475px) {
+    display: none;
+  }
+}
+
+.menu {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 50px;
+  height: 100%;
+  @media only screen and (max-width: 475px) {
+    gap: 40px;
+  }
+}
+
+.menuItem:first-child {
+  margin-right: auto;
+}
+
+.menuLink {
+  font-size: 20px;
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--primary-color-white);
+  &:hover {
+    color: rgba(255, 255, 255, 0.6);
+  }
+}

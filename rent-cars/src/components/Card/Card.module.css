@@ -1,0 +1,113 @@
+.wrapper {
+  position: relative;
+  width: 274px;
+  height: 426px;
+}
+
+.image {
+  width: 274px;
+  height: 268px;
+  object-fit: cover;
+  border-radius: 14px;
+  margin-bottom: 14px;
+}
+
+.titleWrapper {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  width: 274px;
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 500;
+  white-space: nowrap;
+  width: 230px;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.make {
+  font-size: 16px;
+}
+
+.model {
+  color: var(--primary-color-blue);
+}
+
+.price {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.optionsWrapper {
+  display: flex;
+  margin-bottom: 4px;
+  overflow: hidden;
+  & :last-child {
+    border-right: none;
+    padding-right: 0;
+  }
+  & :first-child {
+    padding-left: 0;
+  }
+}
+
+.option {
+  font-size: 12px;
+  color: rgba(18, 20, 23, 0.5);
+  padding: 0 6px;
+  border-right: 1px solid rgba(18, 20, 23, 0.1);
+  white-space: nowrap;
+  &:last-child {
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
+}
+
+.btn {
+  width: 274px;
+  height: 44px;
+  margin-top: 28px;
+  background-color: var(--primary-color-blue);
+  color: var(--primary-color-white);
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  &:hover {
+    background-color: var(--active-color-blue);
+  }
+}
+
+.btnFav {
+  position: absolute;
+  background-color: transparent;
+  border: none;
+  top: 14px;
+  right: 14px;
+  svg {
+    fill: transparent;
+    stroke: var(--primary-color-white);
+  }
+  svg:hover {
+    stroke: var(--primary-color-blue);
+  }
+}
+
+.btnFavActive {
+  position: absolute;
+  background-color: transparent;
+  border: none;
+  top: 14px;
+  right: 14px;
+  svg {
+    stroke: var(--primary-color-blue);
+    fill: var(--primary-color-blue);
+  }
+  svg:hover {
+    fill: transparent;
+  }
+}

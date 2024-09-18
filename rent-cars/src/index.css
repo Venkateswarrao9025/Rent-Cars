@@ -1,0 +1,89 @@
+:root {
+  --primary-color-white: #ffffff;
+  --primary-color-black: #121417;
+  --secondary-color-black: rgba(18, 20, 23, 0.5);
+
+  --primary-color-blue: #3470ff;
+  --active-color-blue: #0b44cd;
+
+  --backdrop-color-black: rgba(18, 20, 23, 0.8);
+  --backdrop-color-loader: rgba(0, 0, 0, 0.8);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Manrope", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-style: normal;
+  line-height: 1.5;
+}
+
+h1,
+h2,
+h3,
+h4,
+p {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+ul,
+ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+button {
+  cursor: pointer;
+  transition: background-color 250ms cubic-bezier(0.4, 0, 0.2, 1),
+    color 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+a {
+  transition: background-color 250ms cubic-bezier(0.4, 0, 0.2, 1),
+    color 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+svg {
+  transition: fill 250ms cubic-bezier(0.4, 0, 0.2, 1),
+    stroke 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.body-scroll-lock {
+  overflow: hidden;
+}
+
+::-webkit-scrollbar {
+  position: absolute;
+  background-color: transparent;
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  border: none;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(18, 20, 23, 0.05);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(18, 20, 23, 0.15);
+}
+
+.active {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
