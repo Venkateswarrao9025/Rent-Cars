@@ -7,12 +7,17 @@ const HomePage = lazy(() => import("./pages/HomePage"));
 const CatalogPage = lazy(() => import("./pages/CatalogPage"));
 const FavoritePage = lazy(() => import("./pages/FavoritePage"));
 
+const RegisterPage = lazy(() => import("./pages/RegisterOwner"));
+
 function App() {
   return (
     <Routes>
       <Route path="/" element={<SharedLayout />}>
         <Route index element={<HomePage />}></Route>
         <Route path="catalog" element={<CatalogPage />}></Route>
+
+        <Route path="owner/create" element={<RegisterPage />}></Route>
+
         <Route path="favorites" element={<FavoritePage />}></Route>
         <Route path="*" element={<Navigate to="/" />}></Route>
       </Route>
