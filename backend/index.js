@@ -1,8 +1,6 @@
 import express from "express";
-import mongoose from "mongoose";
-import { PORT, mongodbURL } from "./config.js";
-import { Owner } from "./models/ownerModel.js";
 import ownerRoute from "./routes/ownerRoute.js";
+import carRoute from "./routes/carRoute.js";
 import cors from 'cors';
 
 const app = express();
@@ -16,7 +14,8 @@ app.get('/', (req, res) => {
     res.sendStatus(200);
 });
 
-app.use('/owner', ownerRoute)
+app.use('/owner', ownerRoute);
+app.use('/car', carRoute);
 
 // mongoose
 //     .connect(mongodbURL)

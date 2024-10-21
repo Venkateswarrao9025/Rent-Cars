@@ -62,7 +62,7 @@ const RegisterOwner = () => {
                 .post('http://localhost:5555/owner', data)
                 .then(() => {
                     setLoading(false);
-                    navigate('/owner');
+                    navigate('/owner/login', { state: { message: 'Registration successful' } });
                 })
                 .catch((error) => {
                     console.log(error);
@@ -95,7 +95,7 @@ const RegisterOwner = () => {
                 {errors.lname && <p className="text-danger">{errors.lname}</p>}
                 <label className='form-label'>Email</label>
                 <input
-                    type="text"
+                    type="email"
                     value={email}
                     className='form-control mb-3'
                     onChange={(e) => setEmail(e.target.value)}
