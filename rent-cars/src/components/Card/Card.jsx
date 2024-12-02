@@ -11,21 +11,17 @@ import Icon from "../Icon/Icon";
 
 const Card = ({ data }) => {
   const {
-    id,
-    make,
+    _id,
+    brand,
     model,
     year,
-    address,
-    accessories,
-    rentalCompany,
-    rentalPrice,
-    img,
     type,
     mileage,
+    price,
+    image,
   } = data;
 
-  const city = address?.split(",")[1];
-  const country = address?.split(",")[2];
+  const imPath = `http://localhost:5555/car/image/${_id}`;
 
   const dispatch = useDispatch();
 
@@ -35,16 +31,16 @@ const Card = ({ data }) => {
   const favoritesCars = useSelector(selectAllFavoritesCars);
 
   useEffect(() => {
-    if (favoritesCars.find((car) => car.id === id)) {
+    if (favoritesCars.find((car) => car._id === _id)) {
       setIsFavorite(true);
     } else {
       setIsFavorite(false);
     }
-  }, [favoritesCars, dispatch, id]);
+  }, [favoritesCars, dispatch, _id]);
 
   const handleFavClick = () => {
-    if (favoritesCars.find((car) => car.id === id)) {
-      dispatch(deleteCar(data.id));
+    if (favoritesCars.find((car) => car._id === _id)) {
+      dispatch(deleteCar(data._id));
     } else {
       dispatch(addCar(data));
     }
@@ -56,29 +52,20 @@ const Card = ({ data }) => {
 
   return (
     <div className={css.wrapper}>
-      <div className="">
-        <img className={css.image} src={img} alt={model} width="274" />
+      <div>
+        <img className={css.image} src={imPath} alt={model} width="274" />
         <div className={css.titleWrapper}>
           <h3 className={css.title}>
-            {`${make} `}
+            {`${brand} `}
             <span className={css.model}>{model}</span>
             {`, ${year}`}
           </h3>
-          <span className={css.price}>${rentalPrice}</span>
+          <span className={css.price}>${price}</span>
         </div>
         <div>
           <div className={css.optionsWrapper}>
-            <span className={css.option}>{city}</span>
-            <span className={css.option}>{country}</span>
-            <span className={css.option}>{rentalCompany}</span>
-            <span className={css.option}>Premium</span>
-          </div>
-
-          <div className={css.optionsWrapper}>
-            <span className={css.option}>{type}</span>
-            <span className={css.option}>{make}</span>
-            <span className={css.option}>{mileage}</span>
-            <span className={css.option}>{accessories[0]}</span>
+            <span className={css.option}>Type: {type}</span>
+            <span className={css.option}>Mileage: {mileage}</span>
           </div>
         </div>
         <button className={css.btn} onClick={handleMore}>
@@ -87,7 +74,7 @@ const Card = ({ data }) => {
       </div>
       <button
         className={isFavorite ? css.btnFavActive : css.btnFav}
-        onClick={(id) => handleFavClick(id)}
+        onClick={handleFavClick}
       >
         <Icon id="icon-fav" width="18" height="18" />
       </button>

@@ -31,7 +31,7 @@ router.post('/newcar', upload.single('image'), async (req, res) => {
             engineSize: req.body.engineSize,
             fuelConsumption: req.body.fuelConsumption,
             description: req.body.description,
-            image: req.file.path, 
+            image: req.file.filename, 
             owner: req.body.owner
         };
 
@@ -41,6 +41,24 @@ router.post('/newcar', upload.single('image'), async (req, res) => {
         console.log(error.message);
         res.status(500).send({ message: error.message });
     }
+});
+
+// GET /api/cars
+router.get("/cars", async (req, res) => {
+  const { make, price, from, to } = req.query;
+
+  try {
+    const query = {};
+    if (make) query.brand = make;
+    if (price) query.price = { $lte: price };
+    if (from || to) query.mileage = { $gte: from || 0, $lte: to || 999999999 };
+
+    const cars = await Car.find(query);
+
+    res.status(200).json(cars);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
 export default router;

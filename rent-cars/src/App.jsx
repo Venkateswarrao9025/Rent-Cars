@@ -10,11 +10,10 @@ const CatalogPage = lazy(() => import("./pages/CatalogPage"));
 const FavoritePage = lazy(() => import("./pages/FavoritePage"));
 
 const RegisterPage = lazy(() => import("./pages/RegisterOwner"));
-const ShowOwnerPage = lazy(() => import("./pages/ShowOwner"));
 const LoginPage = lazy(() => import("./pages/LoginPage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 const RegisterCar = lazy(() => import("./pages/RegisterCar"));
-
+const Notifications = lazy(() => import("./pages/NotificationPage"));
 
 function App() {
   return (
@@ -26,10 +25,10 @@ function App() {
             <Route path="catalog" element={<CatalogPage />}></Route>
 
             <Route path="owner/create" element={<RegisterPage />}></Route>
-            <Route path="owner" element={<ShowOwnerPage />}></Route>
             <Route path="owner/login" element={<LoginPage />}></Route>
             <Route path="owner/profile" element={<ProfilePage />}></Route>
             <Route path="car/newcar" element={<RegisterCar />}></Route>
+            <Route path="owner/notifications" element={<Notifications />}></Route>
 
             <Route path="favorites" element={<FavoritePage />}></Route>
             <Route path="*" element={<Navigate to="/" />}></Route>
