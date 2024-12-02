@@ -1,5 +1,6 @@
-import { useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
+import axios from "axios";
 
 import css from "./Modal.module.css";
 import Icon from "../Icon/Icon";
@@ -9,28 +10,40 @@ const modalRoot = document.querySelector("#root-modal");
 const Modal = ({ onClose, data }) => {
   const modalRef = useRef(null);
 
+  const [ownerDetails, setOwnerDetails] = useState(null);
+
   const {
-    id,
-    make,
+    _id,
+    brand,
     model,
     year,
-    address,
-    accessories,
-    functionalities,
-    rentalCompany,
-    rentalPrice,
-    img,
     type,
     mileage,
     engineSize,
     fuelConsumption,
     description,
-    rentalConditions,
+    image,
+    price,
+    available
   } = data;
 
-  const city = address.split(",")[1];
-  const country = address.split(",")[2];
-  const conditions = rentalConditions.split("\n");
+  const imPath = `http://localhost:5555/car/image/${_id}`;
+
+  const handleRequestBooking = async () => {
+    try {
+        const response = await axios.post("http://localhost:5555/owner/requestBooking", {
+            carId: data._id,
+            message: `I would like to book the ${data.brand} ${data.model}.`,
+        });
+
+        setOwnerDetails(response.data.ownerDetails);
+        alert(response.data.message);
+        // alert("Booking request sent! The owner will be notified.");
+    } catch (error) {
+        console.error(error);
+        alert("Failed to send booking request.");
+    }
+};
 
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -70,80 +83,44 @@ const Modal = ({ onClose, data }) => {
           <Icon id="icon-close" width="24" height="24" />
         </button>
         <div className={css.content}>
-          <img className={css.image} src={img} alt={model} />
+          <img className={css.image} src={imPath} alt={model} />
+          {ownerDetails && (
+                <div className={css.ownerDetails}>
+                    <h4>Owner Details</h4>
+                    <p>Name: {ownerDetails.name}</p>
+                    <p>Phone: {ownerDetails.phone}</p>
+                    <p>Email: {ownerDetails.email}</p>
+                </div>
+            )}
           <h3 className={css.title}>
-            {`${make} `}
+            {`${brand} `}
             <span className={css.model}>{model}</span>
             {`, ${year}`}
           </h3>
           <div className={css.optionsWrapper}>
-            <span className={css.option}>{city}</span>
-            <span className={css.option}>{country}</span>
-            <span className={css.option}>Id: {id}</span>
+            <span className={css.option}>Id: {_id}</span>
             <span className={css.option}>Year: {year}</span>
             <span className={css.option}>Type: {type}</span>
+            <span className={css.option}>Mileage: {mileage}</span>
           </div>
 
           <div className={css.optionsWrapper}>
-            <span className={css.option}>
-              Fuel Consumption: {fuelConsumption}
-            </span>
-            <span className={css.option}>
-              Engine Size: {engineSize}
-              {rentalCompany}
-            </span>
+            <span className={css.option}>Fuel Consumption: {fuelConsumption}</span>
+            <span className={css.option}>Engine Size: {engineSize}</span>
+            <span className={css.option}><b>Available: {available}</b></span>
           </div>
 
           <p className={css.description}>{description}</p>
 
-          <h4 className={css.optionsTitle}>Accessories and functionalities:</h4>
-
-          <div className={css.optionsWrapper}>
-            {accessories.map((item, i) => {
-              return (
-                <span key={i} className={css.option}>
-                  {item}
-                </span>
-              );
-            })}
-          </div>
-
-          <div className={css.optionsWrapper}>
-            {functionalities.map((item, i) => {
-              return (
-                <span key={i} className={css.option}>
-                  {item}
-                </span>
-              );
-            })}
-          </div>
-
-          <h4 className={css.optionsTitle}>Rental Conditions: </h4>
-
           <div className={css.conditionsWrapper}>
             <span className={css.conditionsItem}>
-              {conditions[0].split(":")[0]}:{" "}
-              <span className={css.blue}>{conditions[0].split(":")[1]}</span>
-            </span>
-            <span className={css.conditionsItem}>{conditions[1]}</span>
-          </div>
-
-          <div className={css.conditionsWrapper}>
-            <span className={css.conditionsItem}>{conditions[2]}</span>
-            <span className={css.conditionsItem}>
-              Mileage:{" "}
-              <span className={css.blue}>
-                {new Intl.NumberFormat("en-US").format(mileage)}
-              </span>
-            </span>
-            <span className={css.conditionsItem}>
-              Price: <span className={css.blue}>{rentalPrice}$</span>
+              Price: <span className={css.blue}>{price}$</span>
             </span>
           </div>
 
-          <a className={css.btn} href="tel:+380730000000">
-            Rental car
-          </a>
+          <button className={css.btn} onClick={handleRequestBooking}>
+                    Request Booking
+          </button>
         </div>
       </div>
     </div>,

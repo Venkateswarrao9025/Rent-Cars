@@ -77,4 +77,62 @@ describe('Backend Integration and Database Connection Tests', () => {
     expect(response.body.message).toBe("Invalid password");
   });
 
+  // Test for booking a car
+  test('Should successfully create a booking request', async () => {
+    const bookingRequest = {
+      carId: "674df0d60fbd550782624fdb", 
+      userId: "674deff10fbd550782624fd5" 
+    };
+
+    const response = await request(app)
+      .post("/owner/requestBooking")
+      .send(bookingRequest);
+    
+      expect(response.statusCode).toBe(201);
+      expect(response.body).toHaveProperty("message");
+      expect(response.body.message).toBe("Booking request sent.");
+      expect(response.body).toHaveProperty("ownerDetails");
+      expect(response.body.ownerDetails).toHaveProperty("name");
+      expect(response.body.ownerDetails).toHaveProperty("email");
+      expect(response.body.ownerDetails).toHaveProperty("phone");
+  });
+
+  // Test for car owner receiving a notification
+  test('Should successfully retrieve car owner notifications', async () => {
+    const response = await request(app)
+      .get("/owner/notifications/674deff10fbd550782624fd5") 
+      .send();
+    
+    expect(response.statusCode).toBe(200);
+    expect(response.body[0]).toHaveProperty("car");
+    expect(response.body[0].car.brand).toBe("Volvo");
+  });
+
+  // Test for car owner accepting a booking request
+  test('Should successfully accept a booking request', async () => {
+    const response = await request(app)
+      .put("/owner/notification/674dffa32610ca3a7ff77247") 
+      .send({ status: "Accepted" });
+    
+    expect(response.statusCode).toBe(200);
+  });
+
+  // Test for car owner rejecting a booking request
+  test('Should successfully reject a booking request', async () => {
+    const response = await request(app)
+      .put("/owner/notification/674dffa32610ca3a7ff77247") 
+      .send({ status: "Rejected" });
+    
+    expect(response.statusCode).toBe(200);
+  });
+
+   // Test for car owner deleting a notification
+   test('Should successfully delete a notification', async () => {
+    const response = await request(app)
+      .delete("/owner/notification/674dffa32610ca3a7ff77247") 
+      .send();
+    
+    expect(response.statusCode).toBe(200);
+  });
+
 });

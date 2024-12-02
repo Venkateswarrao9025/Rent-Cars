@@ -157,3 +157,13 @@
     background-color: var(--active-color-blue);
   }
 }
+
+.ownerDetails {
+  background-color: #d4edda; /* Light green background */
+  padding: 15px;
+  border-radius: 5px;
+  margin-top: 10px;
+  margin-bottom: 20px;
+  border: 1px solid green; /* Slightly darker green border */
+}
+
