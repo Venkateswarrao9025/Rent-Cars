@@ -2,16 +2,24 @@ import request from "supertest";
 import app from "./index.js";
 import mongoose from 'mongoose';
 import { mongodbURL } from './config.js';
+import { Car } from './models/carModel.js';
+import { Owner } from './models/ownerModel.js';
+import { Notification } from './models/notificationModel.js';
 
 describe('Backend Integration and Database Connection Tests', () => {
-  
-  // Establish a connection to MongoDB before running the tests
+  let token;
+  let ownerId;
+  let carId;
+  let notificationId;
+
   beforeAll(async () => {
-    await mongoose.connect(mongodbURL, { useNewUrlParser: true, useUnifiedTopology: true });
+    await mongoose.connect(mongodbURL);
   });
 
-  // Close the connection after all tests are done
   afterAll(async () => {
+    await Notification.deleteMany({ car: carId });
+    if (carId) await Car.findByIdAndDelete(carId);
+    await Owner.deleteMany({ email: "johndoe@example.com" });
     await mongoose.disconnect();
   });
 
@@ -39,11 +47,13 @@ describe('Backend Integration and Database Connection Tests', () => {
     const response = await request(app)
       .post("/owner/")
       .send(newOwner);
-    
-    expect(response.statusCode).toBe(201); 
+
+    expect(response.statusCode).toBe(201);
     expect(response.body).toHaveProperty("owner");
     expect(response.body.owner).toHaveProperty("_id");
     expect(response.body.owner.email).toBe("johndoe@example.com");
+    expect(response.body.owner.password).toBeUndefined();
+    ownerId = response.body.owner._id;
   });
 
   // Integration test for successful login
@@ -56,10 +66,12 @@ describe('Backend Integration and Database Connection Tests', () => {
     const response = await request(app)
       .post("/owner/login")
       .send(loginData);
-    
+
     expect(response.statusCode).toBe(200);
     expect(response.body).toHaveProperty("owner");
+    expect(response.body).toHaveProperty("token");
     expect(response.body.owner.email).toBe("johndoe@example.com");
+    token = response.body.token;
   });
 
   // Integration test for invalid login
@@ -72,66 +84,85 @@ describe('Backend Integration and Database Connection Tests', () => {
     const response = await request(app)
       .post("/owner/login")
       .send(invalidLoginData);
-    
+
     expect(response.statusCode).toBe(401);
     expect(response.body.message).toBe("Invalid password");
   });
 
   // Test for booking a car
   test('Should successfully create a booking request', async () => {
-    const bookingRequest = {
-      carId: "674df0d60fbd550782624fdb", 
-      userId: "674deff10fbd550782624fd5" 
-    };
+    const car = await Car.create({
+      brand: "Volvo",
+      model: "XC90",
+      year: 2022,
+      price: 80,
+      mileage: 15000,
+      engineSize: 2.0,
+      fuelConsumption: 8,
+      image: "placeholder.jpg",
+      owner: ownerId,
+    });
+    carId = car._id.toString();
 
     const response = await request(app)
       .post("/owner/requestBooking")
-      .send(bookingRequest);
-    
-      expect(response.statusCode).toBe(201);
-      expect(response.body).toHaveProperty("message");
-      expect(response.body.message).toBe("Booking request sent.");
-      expect(response.body).toHaveProperty("ownerDetails");
-      expect(response.body.ownerDetails).toHaveProperty("name");
-      expect(response.body.ownerDetails).toHaveProperty("email");
-      expect(response.body.ownerDetails).toHaveProperty("phone");
+      .send({ carId });
+
+    expect(response.statusCode).toBe(201);
+    expect(response.body).toHaveProperty("message");
+    expect(response.body.message).toBe("Booking request sent.");
+    expect(response.body).toHaveProperty("ownerDetails");
+    expect(response.body.ownerDetails).toHaveProperty("name");
+    expect(response.body.ownerDetails).toHaveProperty("email");
+    expect(response.body.ownerDetails).toHaveProperty("phone");
+  });
+
+  // Notifications now require the owner's own token
+  test('Should reject notifications access without a token', async () => {
+    const response = await request(app).get(`/owner/notifications/${ownerId}`);
+    expect(response.statusCode).toBe(401);
   });
 
   // Test for car owner receiving a notification
   test('Should successfully retrieve car owner notifications', async () => {
     const response = await request(app)
-      .get("/owner/notifications/674deff10fbd550782624fd5") 
+      .get(`/owner/notifications/${ownerId}`)
+      .set('Authorization', `Bearer ${token}`)
       .send();
-    
+
     expect(response.statusCode).toBe(200);
     expect(response.body[0]).toHaveProperty("car");
     expect(response.body[0].car.brand).toBe("Volvo");
+    notificationId = response.body[0]._id;
   });
 
   // Test for car owner accepting a booking request
   test('Should successfully accept a booking request', async () => {
     const response = await request(app)
-      .put("/owner/notification/674dffa32610ca3a7ff77247") 
+      .put(`/owner/notification/${notificationId}`)
+      .set('Authorization', `Bearer ${token}`)
       .send({ status: "Accepted" });
-    
+
     expect(response.statusCode).toBe(200);
   });
 
   // Test for car owner rejecting a booking request
   test('Should successfully reject a booking request', async () => {
     const response = await request(app)
-      .put("/owner/notification/674dffa32610ca3a7ff77247") 
+      .put(`/owner/notification/${notificationId}`)
+      .set('Authorization', `Bearer ${token}`)
       .send({ status: "Rejected" });
-    
+
     expect(response.statusCode).toBe(200);
   });
 
    // Test for car owner deleting a notification
    test('Should successfully delete a notification', async () => {
     const response = await request(app)
-      .delete("/owner/notification/674dffa32610ca3a7ff77247") 
+      .delete(`/owner/notification/${notificationId}`)
+      .set('Authorization', `Bearer ${token}`)
       .send();
-    
+
     expect(response.statusCode).toBe(200);
   });
 

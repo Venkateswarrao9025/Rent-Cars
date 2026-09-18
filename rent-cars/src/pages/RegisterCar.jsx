@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import Loader from '../components/Loader/Loader';
 import { useNavigate } from 'react-router-dom';
 import "../../node_modules/bootstrap/dist/css/bootstrap.min.css";
@@ -81,11 +81,11 @@ const RegisterCar = () => {
             formData.append('owner', user._id)
 
             setLoading(true);
-            axios
-                .post('http://localhost:5555/car/newcar', formData)
+            api
+                .post('/car/newcar', formData)
                 .then(() => {
                     setLoading(false);
-                    navigate('/car/profile', { state: { message: 'Car registered successfully!' } });
+                    navigate('/owner/profile', { state: { message: 'Car registered successfully!' } });
                 })
                 .catch((error) => {
                     console.log(error);

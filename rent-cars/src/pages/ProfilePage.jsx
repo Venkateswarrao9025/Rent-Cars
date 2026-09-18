@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { UserContext } from '../context/UserContext';
 import "../../node_modules/bootstrap/dist/css/bootstrap.min.css";
 import { Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../services/api';
 
 const Profile = () => {
     const { user } = useContext(UserContext);
@@ -13,8 +13,8 @@ const Profile = () => {
     useEffect(() => {
         if (user) {
             // Fetch user's cars
-            axios
-                .get(`http://localhost:5555/cars/user/${user._id}`)
+            api
+                .get(`/cars/user/${user._id}`)
                 .then((response) => setCars(response.data))
                 .catch((error) => console.error('Error fetching cars:', error));
         }
@@ -31,8 +31,8 @@ const Profile = () => {
     };
 
     const handleSaveClick = (carId) => {
-        axios
-            .put(`http://localhost:5555/cars/${carId}`, editData)
+        api
+            .put(`/cars/${carId}`, editData)
             .then((response) => {
                 // Update the car in the list
                 setCars((prevCars) =>

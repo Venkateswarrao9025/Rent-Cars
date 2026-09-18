@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import axios from "axios";
+import api, { getCarImageUrl } from "../../services/api";
 
 import css from "./Modal.module.css";
 import Icon from "../Icon/Icon";
@@ -22,16 +22,15 @@ const Modal = ({ onClose, data }) => {
     engineSize,
     fuelConsumption,
     description,
-    image,
     price,
     available
   } = data;
 
-  const imPath = `http://localhost:5555/car/image/${_id}`;
+  const imPath = getCarImageUrl(data);
 
   const handleRequestBooking = async () => {
     try {
-        const response = await axios.post("http://localhost:5555/owner/requestBooking", {
+        const response = await api.post("/owner/requestBooking", {
             carId: data._id,
             message: `I would like to book the ${data.brand} ${data.model}.`,
         });

@@ -8,6 +8,7 @@ import css from "./Card.module.css";
 
 import Modal from "../Modal/Modal";
 import Icon from "../Icon/Icon";
+import { getCarImageUrl } from "../../services/api";
 
 const Card = ({ data }) => {
   const {
@@ -18,10 +19,9 @@ const Card = ({ data }) => {
     type,
     mileage,
     price,
-    image,
   } = data;
 
-  const imPath = `http://localhost:5555/car/image/${_id}`;
+  const imPath = getCarImageUrl(data);
 
   const dispatch = useDispatch();
 

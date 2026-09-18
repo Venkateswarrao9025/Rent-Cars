@@ -1,26 +1,50 @@
 import express from 'express';
 import multer from 'multer';
 import path from 'path';
-import { Car } from '../models/carModel.js'; 
+import { v2 as cloudinary } from 'cloudinary';
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
+import { Car } from '../models/carModel.js';
+import { cloudinaryConfig } from '../config.js';
+import { requireAuth } from '../middleware/auth.js';
+import { parseSearchQuery } from '../services/aiSearch.js';
 
 const router = express.Router();
 
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'uploads/'); // Specify the directory to save the file
-    },
-    filename: (req, file, cb) => {
-        // Using original name and add timestamp to avoid name clashes
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        const ext = path.extname(file.originalname); // Get the file extension
-        cb(null, file.fieldname + '-' + uniqueSuffix + ext); // Combine name with extension
-    }
-});
+const cloudinaryEnabled = Boolean(
+    cloudinaryConfig.cloud_name && cloudinaryConfig.api_key && cloudinaryConfig.api_secret
+);
 
-const upload = multer({ storage: storage });
+let storage;
 
-router.post('/newcar', upload.single('image'), async (req, res) => {
+if (cloudinaryEnabled) {
+    cloudinary.config(cloudinaryConfig);
+    storage = new CloudinaryStorage({
+        cloudinary,
+        params: {
+            folder: 'rent-cars',
+            allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+        },
+    });
+} else {
+    console.warn('Cloudinary is not configured — falling back to local disk storage for uploads.');
+    storage = multer.diskStorage({
+        destination: (req, file, cb) => {
+            cb(null, 'uploads/');
+        },
+        filename: (req, file, cb) => {
+            const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+            const ext = path.extname(file.originalname);
+            cb(null, file.fieldname + '-' + uniqueSuffix + ext);
+        }
+    });
+}
+
+const upload = multer({ storage });
+
+router.post('/newcar', requireAuth, upload.single('image'), async (req, res) => {
     try {
+        const imagePath = cloudinaryEnabled ? req.file.path : req.file.filename;
+
         const newCar = {
             brand: req.body.brand,
             model: req.body.model,
@@ -31,8 +55,8 @@ router.post('/newcar', upload.single('image'), async (req, res) => {
             engineSize: req.body.engineSize,
             fuelConsumption: req.body.fuelConsumption,
             description: req.body.description,
-            image: req.file.filename, 
-            owner: req.body.owner
+            image: imagePath,
+            owner: req.owner.id,
         };
 
         const car = await Car.create(newCar);
@@ -43,21 +67,38 @@ router.post('/newcar', upload.single('image'), async (req, res) => {
     }
 });
 
-// GET /api/cars
-router.get("/cars", async (req, res) => {
-  const { make, price, from, to } = req.query;
-
-  try {
+const buildCarQuery = ({ make, price, from, to }) => {
     const query = {};
     if (make) query.brand = make;
     if (price) query.price = { $lte: price };
     if (from || to) query.mileage = { $gte: from || 0, $lte: to || 999999999 };
+    return query;
+};
 
-    const cars = await Car.find(query);
-
+// GET /api/cars
+router.get("/cars", async (req, res) => {
+  try {
+    const cars = await Car.find(buildCarQuery(req.query));
     res.status(200).json(cars);
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+});
+
+// POST /car/search/ai — turns a free-text query into the same filter shape as GET /cars
+router.post("/search/ai", async (req, res) => {
+  const { query } = req.body;
+
+  if (!query || typeof query !== "string") {
+    return res.status(400).json({ message: "A search query string is required." });
+  }
+
+  try {
+    const filters = await parseSearchQuery(query);
+    const cars = await Car.find(buildCarQuery(filters));
+    res.status(200).json({ filters, cars });
+  } catch (error) {
+    res.status(502).json({ message: error.message });
   }
 });
 

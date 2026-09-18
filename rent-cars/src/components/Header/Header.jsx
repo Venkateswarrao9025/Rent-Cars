@@ -6,12 +6,11 @@ import IconCar from "../../images/car.svg";
 
 const Header = () => {
   
-  const { user, setUser } = useContext(UserContext); // Get user state and setUser function
+  const { user, logout, unreadCount } = useContext(UserContext); // Get user state and logout function
   const navigate = useNavigate(); // For navigation after logout
 
   const handleLogout = () => {
-    setUser(null); // Clear the user context
-    // Optionally, clear any other relevant data, such as localStorage or sessionStorage
+    logout(); // Clear the owner and JWT
     navigate("/"); // Redirect to home after logout
   };
 
@@ -41,7 +40,7 @@ const Header = () => {
             <>
               <li>
                 <NavLink className={css.menuLink} to="/owner/profile">
-                  Profile
+                  Profile{unreadCount > 0 ? ` (${unreadCount})` : ''}
                 </NavLink>
               </li>
               <li>

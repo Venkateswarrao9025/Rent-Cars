@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import Loader from '../components/Loader/Loader';
 import { useNavigate } from 'react-router-dom';
 import "../../node_modules/bootstrap/dist/css/bootstrap.min.css";
@@ -58,8 +58,8 @@ const RegisterOwner = () => {
             console.log(data);
 
             setLoading(true);
-            axios
-                .post('http://localhost:5555/owner', data)
+            api
+                .post('/owner', data)
                 .then(() => {
                     setLoading(false);
                     navigate('/owner/login', { state: { message: 'Registration successful' } });

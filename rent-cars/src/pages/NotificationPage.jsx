@@ -1,15 +1,16 @@
-import axios from "axios";
+import api from "../services/api";
 import React, { useContext, useEffect, useState } from "react";
 import { UserContext } from "../context/UserContext";
+import { getSocket } from "../services/socket";
 import "../../node_modules/bootstrap/dist/css/bootstrap.min.css";
 
 const Notifications = () => {
-    const { user } = useContext(UserContext);
+    const { user, clearUnread } = useContext(UserContext);
     const [notifications, setNotifications] = useState([]);
 
     const fetchNotifications = async () => {
         try {
-            const response = await axios.get(`http://localhost:5555/owner/notifications/${user._id}`);
+            const response = await api.get(`/owner/notifications/${user._id}`);
             setNotifications(response.data);
         } catch (error) {
             console.error("Failed to fetch notifications:", error);
@@ -20,12 +21,27 @@ const Notifications = () => {
     useEffect(() => {
         if (user && user._id) {
             fetchNotifications();
+            clearUnread();
         }
     }, [user]);
 
+    // Prepend bookings that arrive live while this page is open
+    useEffect(() => {
+        const socket = getSocket();
+        if (!socket) return;
+
+        const handleBooking = (notification) => {
+            setNotifications((prev) => [notification, ...prev]);
+            clearUnread();
+        };
+
+        socket.on('booking:new', handleBooking);
+        return () => socket.off('booking:new', handleBooking);
+    }, []);
+
     const handleResponse = async (id, status) => {
         try {
-            await axios.put(`http://localhost:5555/owner/notification/${id}`, { status });
+            await api.put(`/owner/notification/${id}`, { status });
             alert(`Booking ${status}.`);
             fetchNotifications(); // Refresh notifications after status update
         } catch (error) {
@@ -36,7 +52,7 @@ const Notifications = () => {
 
     const handleDelete = async (id) => {
         try {
-            await axios.delete(`http://localhost:5555/owner/notification/${id}`);
+            await api.delete(`/owner/notification/${id}`);
             alert("Notification deleted.");
             fetchNotifications(); // Refresh notifications after deletion
         } catch (error) {

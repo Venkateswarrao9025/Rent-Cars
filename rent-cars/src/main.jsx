@@ -11,7 +11,7 @@ import { persistor, store } from "./redux/store.js";
 import App from "./App.jsx";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <BrowserRouter basename="rent-cars">
+  <BrowserRouter basename={import.meta.env.BASE_URL}>
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <App />

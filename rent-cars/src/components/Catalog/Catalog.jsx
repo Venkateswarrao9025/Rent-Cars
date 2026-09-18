@@ -94,6 +94,7 @@ import { selectAllCars, selectLoading } from "../../redux/cars/selectors";
 import Card from "../Card/Card";
 import Filter from "../Filter/Filter";
 import Loader from "../Loader/Loader";
+import AiSearchBar from "../AiSearchBar/AiSearchBar";
 
 const Catalog = () => {
   const [searchParams] = useSearchParams();
@@ -128,6 +129,7 @@ const Catalog = () => {
 
   return (
     <>
+      <AiSearchBar />
       <div className={css.container}>
         <Filter />
         <section className={css.sectionCatalog}>

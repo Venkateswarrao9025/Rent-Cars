@@ -16,7 +16,7 @@ const Favorites = () => {
         <section className={css.sectionCatalog}>
           {cars?.length > 0 ? (
             cars.map((car) => {
-              return <Card key={car.id} data={car} />;
+              return <Card key={car._id} data={car} />;
             })
           ) : (
             <p className={css.noSelect}>

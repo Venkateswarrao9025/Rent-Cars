@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import Loader from '../components/Loader/Loader';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { UserContext } from '../context/UserContext';
@@ -13,7 +13,7 @@ const Login = () => {
     const [error, setError] = useState('');
     const navigate = useNavigate();
     const location = useLocation();
-    const {setUser} = useContext(UserContext);
+    const { login } = useContext(UserContext);
 
     const successMessage = location.state?.message || '';
 
@@ -46,12 +46,12 @@ const Login = () => {
             console.log(data);
 
             setLoading(true);
-            axios
-                .post('http://localhost:5555/owner/login', data)
+            api
+                .post('/owner/login', data)
                 .then((response) => {
                     setLoading(false);
-                    const user = response.data.owner; 
-                    setUser(user);
+                    const { owner, token } = response.data;
+                    login(owner, token);
                     navigate('/owner/profile');
                 })
                 .catch((error) => {

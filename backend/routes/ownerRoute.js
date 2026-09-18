@@ -1,13 +1,25 @@
 import express from "express";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 import { Owner } from '../models/ownerModel.js';
 import { Car } from '../models/carModel.js';
 import { Notification } from '../models/notificationModel.js';
+import { jwtSecret, jwtExpiresIn } from '../config.js';
+import { requireAuth, requireSelf } from '../middleware/auth.js';
+import { notifyOwner } from '../socket.js';
 
 const router = express.Router();
 
-router.get('/', async (req, res) => {
+const SALT_ROUNDS = 10;
+
+const toPublicOwner = (owner) => {
+    const { password, ...rest } = owner.toObject();
+    return rest;
+};
+
+router.get('/', requireAuth, async (req, res) => {
     try {
-        const owners = await Owner.find({});
+        const owners = await Owner.find({}).select('-password');
         return res.status(200).json(owners);
     } catch (error) {
         console.log(error.message);
@@ -20,17 +32,18 @@ router.post('/', async (req, res) => {
     try {
         console.log('Post owner');
 
+        const hashedPassword = await bcrypt.hash(req.body.password, SALT_ROUNDS);
+
         const newOwner = {
             fname: req.body.fname,
             lname: req.body.lname,
             email: req.body.email,
             phone: req.body.phone,
-            password: req.body.password,
+            password: hashedPassword,
         }
-        console.log(newOwner);
 
         const owner = await Owner.create(newOwner);
-        res.status(201).json({ message: "Registration successful. Please Login", owner });
+        res.status(201).json({ message: "Registration successful. Please Login", owner: toPublicOwner(owner) });
     } catch (error) {
         console.log(error.message);
         res.status(500).send({ message: error.message })
@@ -52,19 +65,24 @@ router.post('/login', async (req, res) => {
 
     try {
         const owner = await Owner.findOne({ email });
-        console.log(owner);
 
         if (!owner) {
             console.log("Invalid Email");
             return res.status(404).json({ message: "Invalid email" });
         }
 
-        if (owner.password !== password) {
+        const passwordMatches = await bcrypt.compare(password, owner.password);
+
+        if (!passwordMatches) {
             console.log("Invalid password")
             return res.status(401).json({ message: "Invalid password" });
         }
 
-        return res.status(200).json({ message: "Login successful", owner });
+        const token = jwt.sign({ id: owner._id.toString(), email: owner.email }, jwtSecret, {
+            expiresIn: jwtExpiresIn,
+        });
+
+        return res.status(200).json({ message: "Login successful", owner: toPublicOwner(owner), token });
     } catch (error) {
         console.log(error.message);
         res.status(500).send({ message: error.message });
@@ -86,8 +104,11 @@ router.post('/requestBooking', async (req, res) => {
             owner: car.owner,
         });
 
+        const populatedNotification = await notification.populate('car');
+        notifyOwner(car.owner._id.toString(), 'booking:new', populatedNotification);
+
         res.status(201).json({
-            message: "Booking request sent.", 
+            message: "Booking request sent.",
             ownerDetails: {
                 name: `${car.owner.fname} ${car.owner.lname}`,
                 phone: car.owner.phone,
@@ -101,7 +122,7 @@ router.post('/requestBooking', async (req, res) => {
 });
 
 // Fetch notifications for a specific owner
-router.get('/notifications/:ownerId', async (req, res) => {
+router.get('/notifications/:ownerId', requireAuth, requireSelf('ownerId'), async (req, res) => {
     const { ownerId } = req.params;
 
     try {
@@ -114,20 +135,23 @@ router.get('/notifications/:ownerId', async (req, res) => {
 });
 
 // Update notification status (Accept/Reject)
-router.put('/notification/:id', async (req, res) => {
+router.put('/notification/:id', requireAuth, async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
 
     try {
-        const notification = await Notification.findByIdAndUpdate(
-            id,
-            { status },
-            { new: true }
-        );
+        const notification = await Notification.findById(id);
 
         if (!notification) {
             return res.status(404).json({ message: "Notification not found." });
         }
+
+        if (notification.owner.toString() !== req.owner.id) {
+            return res.status(403).json({ message: "Not authorized to update this notification." });
+        }
+
+        notification.status = status;
+        await notification.save();
 
         res.json({ message: "Notification status updated.", notification });
     } catch (error) {
@@ -137,11 +161,21 @@ router.put('/notification/:id', async (req, res) => {
 });
 
 // Delete notification
-router.delete('/notification/:id', async (req, res) => {
+router.delete('/notification/:id', requireAuth, async (req, res) => {
     const { id } = req.params;
 
     try {
-        await Notification.findByIdAndDelete(id);
+        const notification = await Notification.findById(id);
+
+        if (!notification) {
+            return res.status(404).json({ message: "Notification not found." });
+        }
+
+        if (notification.owner.toString() !== req.owner.id) {
+            return res.status(403).json({ message: "Not authorized to delete this notification." });
+        }
+
+        await notification.deleteOne();
         res.json({ message: "Notification deleted." });
     } catch (error) {
         console.error(error);
