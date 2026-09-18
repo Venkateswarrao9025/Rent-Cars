@@ -5,6 +5,11 @@ import { connectDB } from "../lib/db.js";
 // server around, so there's no place to run Socket.io here — real-time booking
 // notifications only work when the backend runs on a persistent host (see server.js).
 export default async function handler(req, res) {
-    await connectDB();
+    try {
+        await connectDB();
+    } catch (error) {
+        res.status(500).json({ message: "Database connection failed", error: error.message });
+        return;
+    }
     return app(req, res);
 }
